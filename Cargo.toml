@@ -1,0 +1,8 @@
+[package]
+name = "wc_rs"
+version = "0.1.0"
+authors = ["Martin Mroz <martinmroz@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+rayon = "^1.2"
