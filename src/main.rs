@@ -1,10 +1,6 @@
-
 use std::env;
 use std::fs::File;
-use std::io::{
-    BufRead,
-    BufReader,
-};
+use std::io::{BufRead, BufReader};
 
 use rayon::prelude::*;
 
@@ -42,9 +38,13 @@ struct Flux {
 }
 
 impl Flux {
-
     /// Returns a new instance of the receiver with the provided parameters.
-    fn new(leftmost_char_type: CharType, words: usize, lines: usize, rightmost_char_type: CharType) -> Self {
+    fn new(
+        leftmost_char_type: CharType,
+        words: usize,
+        lines: usize,
+        rightmost_char_type: CharType,
+    ) -> Self {
         Flux {
             leftmost_char_type,
             words,
@@ -58,16 +58,22 @@ impl Flux {
         let lines = self.lines + rhs.lines;
         let words = {
             // If the span is formed along a non-space to non-space boundary the word count is one less than the sum.
-            if let (CharType::NotSpace, CharType::NotSpace) = (self.rightmost_char_type, rhs.leftmost_char_type) {
+            if let (CharType::NotSpace, CharType::NotSpace) =
+                (self.rightmost_char_type, rhs.leftmost_char_type)
+            {
                 self.words + rhs.words - 1
             } else {
                 self.words + rhs.words
             }
         };
 
-        Flux::new(self.leftmost_char_type, words, lines, rhs.rightmost_char_type)
+        Flux::new(
+            self.leftmost_char_type,
+            words,
+            lines,
+            rhs.rightmost_char_type,
+        )
     }
-
 }
 
 impl From<u8> for Flux {
@@ -86,17 +92,17 @@ impl From<u8> for Flux {
 /// Takes two optional Flux instances and returns, where possible, the span of the two.
 fn span_opt(lhs: Option<Flux>, rhs: Option<Flux>) -> Option<Flux> {
     lhs.map_or(rhs, |left_flux| {
-        rhs.map(|right_flux| {
-            left_flux.span(right_flux)
-        })
+        rhs.map(|right_flux| left_flux.span(right_flux))
     })
 }
 
 /// Computes the flux over the provided input byte string.
 fn flux_over_byte_string<T>(input: T) -> Option<Flux>
 where
-    T: AsRef<[u8]> {
-    input.as_ref()
+    T: AsRef<[u8]>,
+{
+    input
+        .as_ref()
         .par_iter()
         .cloned()
         .map(Flux::from)
@@ -106,7 +112,7 @@ where
 
 fn wc<T>(input: &mut T) -> std::io::Result<Counts>
 where
-    T: BufRead
+    T: BufRead,
 {
     let mut bytes = 0;
     let mut flux = None;
@@ -128,8 +134,8 @@ where
         input.consume(length);
     }
 
-    Ok(Counts { 
-        bytes, 
+    Ok(Counts {
+        bytes,
         words: flux.map(|f| f.words).unwrap_or_default(),
         lines: flux.map(|f| f.lines).unwrap_or_default(),
     })
@@ -144,7 +150,8 @@ fn main() {
     let counts = wc(&mut reader).expect("Error reading file");
 
     // Display the results in the format of the original `wc` utility.
-    println!("{lines:>8} {words:>7} {bytes:7} {file}", 
+    println!(
+        "{lines:>8} {words:>7} {bytes:7} {file}",
         bytes = counts.bytes,
         words = counts.words,
         lines = counts.lines,
@@ -158,12 +165,10 @@ mod tests {
 
     #[test]
     fn test_flux_over_byte_string() {
-        assert_eq!(flux_over_byte_string("testing one two three".as_bytes()), Some(Flux::new(
-            CharType::NotSpace,
-            4,
-            0,
-            CharType::NotSpace
-        )));
+        assert_eq!(
+            flux_over_byte_string("testing one two three".as_bytes()),
+            Some(Flux::new(CharType::NotSpace, 4, 0, CharType::NotSpace))
+        );
     }
 
     #[test]
@@ -171,12 +176,10 @@ mod tests {
         let flux_l = flux_over_byte_string("testing on");
         let flux_r = flux_over_byte_string("e two three");
 
-        assert_eq!(span_opt(flux_l, flux_r), Some(Flux::new(
-            CharType::NotSpace,
-            4,
-            0,
-            CharType::NotSpace
-        )));
+        assert_eq!(
+            span_opt(flux_l, flux_r),
+            Some(Flux::new(CharType::NotSpace, 4, 0, CharType::NotSpace))
+        );
     }
 
     #[test]
@@ -184,11 +187,9 @@ mod tests {
         let flux_l = flux_over_byte_string("testing one ");
         let flux_r = flux_over_byte_string(" two three");
 
-        assert_eq!(span_opt(flux_l, flux_r), Some(Flux::new(
-            CharType::NotSpace,
-            4,
-            0,
-            CharType::NotSpace
-        )));
+        assert_eq!(
+            span_opt(flux_l, flux_r),
+            Some(Flux::new(CharType::NotSpace, 4, 0, CharType::NotSpace))
+        );
     }
 }
