@@ -5,4 +5,4 @@ This is a less-than-traditional implementation of the utility built on top of a 
 monoid and parallelized with Rayon. The result on my machine was a 2X performance
 speed-up and a 10% reduction in memory usage.
 
-Check out the write-up [https://medium.com/@martinmroz/beating-c-with-120-lines-of-rust-wc-a0db679fe920](here)
+Check out the write-up here: [here](https://medium.com/@martinmroz/beating-c-with-120-lines-of-rust-wc-a0db679fe920)!
